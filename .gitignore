@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment variables (KHÔNG BAO GIỜ push lên git)
+.env
+.env.local
+.env.production
+
+# Build output
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+mongodb_data/
+minio_data/
+
+frontend/
+backend/
+docs/
