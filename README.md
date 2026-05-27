@@ -1,34 +1,34 @@
 # SecureLearn Deploy
 
-Repository nay chua cau hinh chay tong the cho du an SecureLearn bang Docker Compose.
+Repository này chứa cấu hình chạy tổng thể cho dự án SecureLearn bằng Docker Compose.
 
-Source code frontend va backend duoc quan ly o 2 repository rieng:
+Source code frontend và backend được quản lý ở 2 repository riêng:
 
 - Frontend: `securelearn-web`
 - Backend: `securelearn-services`
-- Deploy/infra: repository hien tai, chua `docker-compose.yml`
+- Deploy/infra: repository hiện tại, chứa `docker-compose.yml`
 
-## Cau truc thu muc
+## Cấu trúc thư mục
 
-Khi chay local, can dat cac thu muc theo dung cau truc sau:
+Khi chạy local, cần đặt các thư mục theo đúng cấu trúc sau:
 
 ```text
 SecureLearn/
 ├── frontend/              # React, Vite, TypeScript
-├── backend/               # Node.js microservices va Kong config
+├── backend/               # Node.js microservices và Kong config
 │   ├── api-gateway/
 │   │   └── kong.yml
 │   ├── identity-service/
 │   ├── course-service/
 │   └── media-service/
-├── docker-compose.yml     # Cau hinh Docker Compose cho backend services va infra
-├── .env                   # Bien moi truong local, khong push len GitHub
-├── .env.example           # File mau bien moi truong neu co
+├── docker-compose.yml     # Cấu hình Docker Compose cho backend services và infra
+├── .env                   # Biến môi trường local, không push lên GitHub
+├── .env.example           # File mẫu biến môi trường nếu có
 ├── .gitignore
 └── README.md
 ```
 
-Repository deploy chi nen track cac file cau hinh can thiet nhu:
+Repository deploy chỉ nên track các file cấu hình cần thiết như:
 
 ```text
 docker-compose.yml
@@ -37,17 +37,17 @@ docker-compose.yml
 README.md
 ```
 
-Khong track cac thu muc `frontend/` va `backend/` trong repository nay vi chung da co Git repository rieng.
+Không track các thư mục `frontend/` và `backend/` trong repository này vì chúng đã có Git repository riêng.
 
-## Dieu kien truoc khi chay
+## Điều kiện trước khi chạy
 
-Can cai dat:
+Cần cài đặt:
 
 - Docker Desktop
 - Git
-- Node.js neu muon chay frontend rieng o che do development
+- Node.js nếu muốn chạy frontend riêng ở chế độ development
 
-Can clone frontend va backend vao dung vi tri:
+Cần clone frontend và backend vào đúng vị trí:
 
 ```powershell
 cd D:\SecureLearn
@@ -55,17 +55,17 @@ git clone https://github.com/PhamLuongBaoThien/securelearn-web.git frontend
 git clone https://github.com/PhamLuongBaoThien/securelearn-services.git backend
 ```
 
-## Cau hinh moi truong
+## Cấu hình môi trường
 
-Tao file `.env` tai thu muc root `D:\SecureLearn`.
+Tạo file `.env` tại thư mục root `D:\SecureLearn`.
 
-File `.env` la file dung that tren may local va khong duoc push len GitHub. Neu co `.env.example`, co the copy tu file mau:
+File `.env` là file dùng thật trên máy local và không được push lên GitHub. Nếu có `.env.example`, có thể copy từ file mẫu:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Sau do dien cac bien can thiet cho `docker-compose.yml`, bao gom:
+Sau đó điền các biến cần thiết cho `docker-compose.yml`, bao gồm:
 
 ```env
 REDIS_PASSWORD=
@@ -107,16 +107,16 @@ S3_PUBLIC_DOMAIN=
 S3_PUBLIC_ENDPOINT=
 ```
 
-## Chay he thong
+## Chạy hệ thống
 
-Tai thu muc root:
+Tại thư mục root:
 
 ```powershell
 cd D:\SecureLearn
 docker compose up -d --build
 ```
 
-Kiem tra container:
+Kiểm tra container:
 
 ```powershell
 docker compose ps
@@ -128,30 +128,30 @@ Xem log:
 docker compose logs -f
 ```
 
-Dung he thong:
+Dừng hệ thống:
 
 ```powershell
 docker compose down
 ```
 
-## Cac service chinh
+## Các service chính
 
 - Kong API Gateway: `http://localhost:8000`
 - MinIO Console: `http://localhost:9001`
-- Identity Service: chay noi bo trong Docker o port `5001`
-- Course Service: chay noi bo trong Docker o port `5002`
-- Media Service: chay noi bo trong Docker o port `5003`
-- Redis, RabbitMQ va MinIO duoc dung lam ha tang noi bo cho backend services
+- Identity Service: chạy nội bộ trong Docker ở port `5001`
+- Course Service: chạy nội bộ trong Docker ở port `5002`
+- Media Service: chạy nội bộ trong Docker ở port `5003`
+- Redis, RabbitMQ và MinIO được dùng làm hạ tầng nội bộ cho backend services
 
-Frontend development mac dinh chay rieng o:
+Frontend development mặc định chạy riêng ở:
 
 ```text
 http://localhost:5173
 ```
 
-## Ghi chu ve Git
+## Ghi chú về Git
 
-Repository nay chi dung cho cau hinh deploy/infra. Khi sua code frontend hoac backend, commit va push trong tung repository rieng:
+Repository này chỉ dùng cho cấu hình deploy/infra. Khi sửa code frontend hoặc backend, commit và push trong từng repository riêng:
 
 ```powershell
 cd D:\SecureLearn\frontend
@@ -169,7 +169,7 @@ git commit -m "Update backend"
 git push
 ```
 
-Khi sua `docker-compose.yml`, `.gitignore`, `.env.example` hoac README nay thi commit trong repository deploy tai root:
+Khi sửa `docker-compose.yml`, `.gitignore`, `.env.example` hoặc README này thì commit trong repository deploy tại root:
 
 ```powershell
 cd D:\SecureLearn
