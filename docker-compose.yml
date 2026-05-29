@@ -103,6 +103,7 @@ services:
       PORT: 5002
       NODE_ENV: production
       MONGO_URI: ${MONGO_URI_COURSE}
+      REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379
       ACCESS_TOKEN: ${ACCESS_TOKEN}
       RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
@@ -111,6 +112,7 @@ services:
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
     depends_on:
+      - redis
       - rabbitmq
     restart: unless-stopped
 
@@ -122,6 +124,7 @@ services:
       PORT: 5003
       NODE_ENV: production
       MONGO_URI: ${MONGO_URI_MEDIA}
+      REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379
       RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
       S3_ENDPOINT: ${S3_ENDPOINT:-}
@@ -133,6 +136,7 @@ services:
       S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-}
       API_URL: ${API_URL:-http://localhost:8000}
     depends_on:
+      - redis
       - rabbitmq
     restart: unless-stopped
 
