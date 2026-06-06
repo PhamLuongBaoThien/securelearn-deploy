@@ -64,6 +64,7 @@ services:
     depends_on:
       - identity-service
       - course-service
+      - payment-service
       - media-service
     restart: unless-stopped
 
@@ -111,6 +112,24 @@ services:
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+    depends_on:
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: ./backend
+      dockerfile: payment-service/Dockerfile
+    environment:
+      PORT: 5004
+      NODE_ENV: production
+      MONGO_URI: ${MONGO_URI_PAYMENT}
+      REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      COURSE_SERVICE_URL: ${COURSE_SERVICE_URL:-http://course-service:5002}
     depends_on:
       - redis
       - rabbitmq
