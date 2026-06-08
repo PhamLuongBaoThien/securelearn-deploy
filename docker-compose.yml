@@ -130,6 +130,16 @@ services:
       RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
       COURSE_SERVICE_URL: ${COURSE_SERVICE_URL:-http://course-service:5002}
+      IDENTITY_SERVICE_URL: ${IDENTITY_SERVICE_URL:-http://identity-service:5001}
+      VNPAY_URL: ${VNPAY_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-}
+      VNPAY_RETURN_URL: ${VNPAY_RETURN_URL:-http://localhost:5173/payment/vnpay-return}
+      VNPAY_IPN_URL: ${VNPAY_IPN_URL:-http://localhost:8000/api/payments/webhooks/vnpay}
+      VNPAY_LOCALE: ${VNPAY_LOCALE:-vn}
+      VNPAY_CURRENCY: ${VNPAY_CURRENCY:-VND}
+      VNPAY_ORDER_TYPE: ${VNPAY_ORDER_TYPE:-190002}
+      VNPAY_EXPIRE_MINUTES: ${VNPAY_EXPIRE_MINUTES:-15}
     depends_on:
       - redis
       - rabbitmq
