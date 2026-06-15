@@ -148,7 +148,7 @@ services:
       MOMO_PARTNER_CODE: ${MOMO_PARTNER_CODE:-}
       MOMO_ACCESS_KEY: ${MOMO_ACCESS_KEY:-}
       MOMO_SECRET_KEY: ${MOMO_SECRET_KEY:-}
-      MOMO_RETURN_URL: ${MOMO_RETURN_URL:-http://localhost:5173/payment/momo-return}
+      MOMO_RETURN_URL: ${MOMO_RETURN_URL:-http://localhost:8000/api/payments/momo-browser-return}
       MOMO_IPN_URL: ${MOMO_IPN_URL:-http://localhost:8000/api/payments/webhooks/momo}
       MOMO_LANG: ${MOMO_LANG:-vi}
       MOMO_AUTO_CAPTURE: ${MOMO_AUTO_CAPTURE:-true}
