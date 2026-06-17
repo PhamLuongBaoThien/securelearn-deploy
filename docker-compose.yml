@@ -42,7 +42,7 @@ services:
         sleep 2;
       done;
       /usr/bin/mc mb myminio/securelearn-media --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/securelearn-media;
+      /usr/bin/mc anonymous set none myminio/securelearn-media;
       echo 'MinIO setup complete.';
       exit 0;
       "
