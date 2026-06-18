@@ -130,10 +130,12 @@ services:
       MONGO_URI: ${MONGO_URI_PROGRESS}
       REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379
       ACCESS_TOKEN: ${ACCESS_TOKEN}
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       COURSE_GRPC_TARGET: ${COURSE_GRPC_TARGET:-course-service:6002}
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
     depends_on:
       - redis
+      - rabbitmq
       - course-service
     restart: unless-stopped
 
