@@ -66,6 +66,7 @@ services:
       - course-service
       - payment-service
       - media-service
+      - progress-service
     restart: unless-stopped
 
   identity-service:
@@ -117,6 +118,23 @@ services:
     depends_on:
       - redis
       - rabbitmq
+    restart: unless-stopped
+
+  progress-service:
+    build:
+      context: ./backend
+      dockerfile: progress-service/Dockerfile
+    environment:
+      PORT: 5005
+      NODE_ENV: production
+      MONGO_URI: ${MONGO_URI_PROGRESS}
+      REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
+      COURSE_GRPC_TARGET: ${COURSE_GRPC_TARGET:-course-service:6002}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+    depends_on:
+      - redis
+      - course-service
     restart: unless-stopped
 
   payment-service:
