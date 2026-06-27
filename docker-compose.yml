@@ -91,6 +91,8 @@ services:
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
       SMTP_PORT: ${SMTP_PORT:-587}
+      OTP_SECRET: ${OTP_SECRET:-}
+      IDENTITY_GRPC_BIND: ${IDENTITY_GRPC_BIND:-0.0.0.0:6001}
       RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
     depends_on:
       - redis
@@ -112,12 +114,14 @@ services:
       COURSE_GRPC_BIND: ${COURSE_GRPC_BIND:-0.0.0.0:6002}
       MEDIA_GRPC_TARGET: ${MEDIA_GRPC_TARGET:-media-service:6003}
       PAYMENT_GRPC_TARGET: ${PAYMENT_GRPC_TARGET:-payment-service:6004}
+      IDENTITY_GRPC_TARGET: ${IDENTITY_GRPC_TARGET:-identity-service:6001}
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
     depends_on:
       - redis
       - rabbitmq
+      - identity-service
     restart: unless-stopped
 
   progress-service:
