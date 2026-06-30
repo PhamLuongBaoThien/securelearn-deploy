@@ -191,6 +191,7 @@ services:
       NODE_ENV: production
       MONGO_URI: ${MONGO_URI_MEDIA}
       REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379
+      PLAYBACK_SEGMENT_SECRET: ${ACCESS_TOKEN}
       RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
       MEDIA_GRPC_BIND: ${MEDIA_GRPC_BIND:-0.0.0.0:6003}
