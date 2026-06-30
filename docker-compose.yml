@@ -67,6 +67,7 @@ services:
       - payment-service
       - media-service
       - progress-service
+      - notification-service
     restart: unless-stopped
 
   identity-service:
@@ -209,5 +210,28 @@ services:
       - rabbitmq
     restart: unless-stopped
 
+  notification-service:
+    build:
+      context: ./backend
+      dockerfile: notification-service/Dockerfile
+    environment:
+      PORT: 5006
+      NODE_ENV: production
+      MONGO_URI: ${MONGO_URI_NOTIFICATION}
+      REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+      IDENTITY_GRPC_TARGET: ${IDENTITY_GRPC_TARGET:-identity-service:6001}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_FROM: ${SMTP_FROM:-}
+    depends_on:
+      - redis
+      - rabbitmq
+      - identity-service
+    restart: unless-stopped
 volumes:
   minio-data:
