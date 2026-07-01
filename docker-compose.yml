@@ -224,6 +224,9 @@ services:
       IDENTITY_GRPC_TARGET: ${IDENTITY_GRPC_TARGET:-identity-service:6001}
       COURSE_GRPC_TARGET: ${COURSE_GRPC_TARGET:-course-service:6002}
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      SOCKET_CORS_ORIGIN: ${SOCKET_CORS_ORIGIN:-http://localhost:5173}
+      RABBITMQ_RETRY_LIMIT: ${RABBITMQ_RETRY_LIMIT:-3}
+      EMAIL_RETRY_LIMIT: ${EMAIL_RETRY_LIMIT:-3}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
