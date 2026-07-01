@@ -222,6 +222,7 @@ services:
       ACCESS_TOKEN: ${ACCESS_TOKEN}
       RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       IDENTITY_GRPC_TARGET: ${IDENTITY_GRPC_TARGET:-identity-service:6001}
+      COURSE_GRPC_TARGET: ${COURSE_GRPC_TARGET:-course-service:6002}
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
@@ -232,6 +233,7 @@ services:
       - redis
       - rabbitmq
       - identity-service
+      - course-service
     restart: unless-stopped
 volumes:
   minio-data:
