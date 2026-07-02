@@ -254,6 +254,7 @@ services:
       IDENTITY_GRPC_TARGET: ${IDENTITY_GRPC_TARGET:-identity-service:6001}
       COURSE_GRPC_TARGET: ${COURSE_GRPC_TARGET:-course-service:6002}
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      SOCKET_CORS_ORIGIN: ${SOCKET_CORS_ORIGIN:-http://localhost:5173}
       S3_ENDPOINT: http://minio:9000
       S3_REGION: ${S3_REGION:-us-east-1}
       S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
@@ -268,3 +269,5 @@ services:
     restart: unless-stopped
 volumes:
   minio-data:
+
+
