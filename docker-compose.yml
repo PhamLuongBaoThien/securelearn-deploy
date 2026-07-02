@@ -68,6 +68,7 @@ services:
       - media-service
       - progress-service
       - notification-service
+      - inbox-service
     restart: unless-stopped
 
   identity-service:
@@ -235,6 +236,33 @@ services:
     depends_on:
       - redis
       - rabbitmq
+      - identity-service
+      - course-service
+    restart: unless-stopped
+
+  inbox-service:
+    build:
+      context: ./backend
+      dockerfile: inbox-service/Dockerfile
+    environment:
+      PORT: 5007
+      NODE_ENV: production
+      MONGO_URI: ${MONGO_URI_INBOX}
+      REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+      IDENTITY_GRPC_TARGET: ${IDENTITY_GRPC_TARGET:-identity-service:6001}
+      COURSE_GRPC_TARGET: ${COURSE_GRPC_TARGET:-course-service:6002}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME:-securelearn-media}
+    depends_on:
+      - redis
+      - rabbitmq
+      - minio
       - identity-service
       - course-service
     restart: unless-stopped
