@@ -11,41 +11,6 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     restart: unless-stopped
 
-  minio:
-    image: minio/minio
-    ports:
-      # Port 9000 (MinIO API) KHÔNG expose ra host — mọi request từ browser đều đi qua Kong (/storage).
-      # Điều này ngăn client biết/gọi trực tiếp MinIO endpoint.
-      # Chỉ giữ 9001 cho MinIO Console (dashboard quản trị) dùng ở dev.
-      # Trên production, nên bỏ luôn 9001 hoặc giới hạn IP truy cập.
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_API_CORS_ALLOW_ORIGIN: "*"
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio-data:/data
-    restart: unless-stopped
-
-  minio-setup:
-    image: minio/mc
-    depends_on:
-      - minio
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    entrypoint: >
-      /bin/sh -c "
-      until (/usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}); do
-        echo 'Waiting for MinIO to start...';
-        sleep 2;
-      done;
-      /usr/bin/mc mb myminio/securelearn-media --ignore-existing;
-      /usr/bin/mc anonymous set none myminio/securelearn-media;
-      echo 'MinIO setup complete.';
-      exit 0;
-      "
 
   api-gateway:
     image: kong:latest
@@ -255,19 +220,17 @@ services:
       COURSE_GRPC_TARGET: ${COURSE_GRPC_TARGET:-course-service:6002}
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
       SOCKET_CORS_ORIGIN: ${SOCKET_CORS_ORIGIN:-http://localhost:5173}
-      S3_ENDPOINT: http://minio:9000
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
       S3_REGION: ${S3_REGION:-us-east-1}
-      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
-      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-${MINIO_ROOT_USER}}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-${MINIO_ROOT_PASSWORD}}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME:-securelearn-media}
     depends_on:
       - redis
       - rabbitmq
-      - minio
       - identity-service
       - course-service
     restart: unless-stopped
-volumes:
-  minio-data:
+# volume minio-data đã được xóa bỏ do sử dụng R2 Cloud
 
 
