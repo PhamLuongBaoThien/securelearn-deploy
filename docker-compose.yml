@@ -104,6 +104,7 @@ services:
       ACCESS_TOKEN: ${ACCESS_TOKEN}
       RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       COURSE_GRPC_TARGET: ${COURSE_GRPC_TARGET:-course-service:6002}
+      PAYMENT_GRPC_TARGET: ${PAYMENT_GRPC_TARGET:-payment-service:6004}
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
     depends_on:
       - redis
