@@ -29,6 +29,7 @@ services:
     depends_on:
       - identity-service
       - course-service
+      - content-service
       - payment-service
       - media-service
       - progress-service
@@ -92,6 +93,20 @@ services:
       - identity-service
     restart: unless-stopped
 
+  content-service:
+    build:
+      context: ./backend
+      dockerfile: content-service/Dockerfile
+    environment:
+      PORT: 5008
+      NODE_ENV: production
+      MONGO_URI: ${MONGO_URI_CONTENT}
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+    restart: unless-stopped
   progress-service:
     build:
       context: ./backend
