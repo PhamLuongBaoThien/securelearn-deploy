@@ -1,0 +1,615 @@
+# ========================
+# Kong Declarative Configuration
+# API Gateway cho SecureLearn Microservices
+#
+# Route matrix hiện tại cho luồng tạo khóa học:
+# - PUBLIC:
+#   GET /api/courses
+#   GET /api/courses/:slug
+#   GET /api/categories
+#   GET/POST/DELETE /api/cart...
+#   GET/POST/DELETE /api/wishlist...
+# - PROTECTED (JWT qua Kong, role check ở service):
+#   GET /api/courses/enrolled
+#   GET /api/courses/my-courses
+#   GET /api/courses/:id/manage
+#   GET /api/courses/:courseId/lessons/:lessonId/quiz
+#   GET /api/courses/:courseId/lessons/:lessonId/quiz/play
+#   GET/POST /api/quiz-attempts...
+#   POST /api/courses/:id/enroll
+#   POST/PUT/PATCH/DELETE /api/courses/...
+#   GET /api/categories/admin/all
+#   POST/PUT/PATCH/DELETE /api/categories/...
+#   GET/POST /api/media/videos...
+#   GET/POST /api/media/documents...
+# ========================
+_format_version: "3.0"
+
+consumers:
+  - username: securelearn-app
+    jwt_secrets:
+      - key: "securelearn"
+        secret: '{{ getenv "KONG_JWT_SECRET" }}'
+        algorithm: HS256
+
+services:
+  - name: identity-service
+    url: http://identity-service:5001
+    routes:
+      - name: identity-public
+        paths:
+          - /api/auth/login
+          - /api/auth/register
+          - /api/auth/refresh-token
+          - /api/auth/forgot-password
+          - /api/auth/verify-reset-otp
+          - /api/auth/reset-password
+          - /api/auth/google
+          - /api/auth/instructors
+          - /api/auth/users
+          - ~/api/auth/instructors/[^/]+/public-profile$
+        strip_path: false
+
+      - name: identity-preflight
+        paths:
+          - /api/auth/me
+          - /api/auth/profile
+          - /api/auth/profile/role
+          - /api/auth/account
+          - /api/auth/password
+          - /api/auth/logout
+        strip_path: false
+        methods:
+          - OPTIONS
+
+      - name: identity-sessions-preflight
+        paths:
+          - /api/auth/sessions
+        strip_path: false
+        methods:
+          - OPTIONS
+
+      - name: identity-sessions-protected
+        paths:
+          - /api/auth/sessions
+        regex_priority: 200
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - DELETE
+      - name: identity-protected
+        paths:
+          - /api/auth/me
+          - /api/auth/profile
+          - /api/auth/profile/role
+          - /api/auth/account
+          - /api/auth/password
+          - /api/auth/logout
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+
+      - name: identity-admin-public
+        paths:
+          - /api/admin/auth
+        strip_path: false
+        methods:
+          - POST
+
+      - name: identity-admin-preflight
+        paths:
+          - /api/admin/auth/me
+          - /api/admin/auth/profile
+          - /api/admin/auth/password
+          - ~/api/admin/auth/staff
+          - ~/api/admin/auth/roles
+          - ~/api/admin/auth/users
+        strip_path: false
+        methods:
+          - OPTIONS
+
+      - name: identity-admin-protected
+        paths:
+          - /api/admin/auth/me
+          - /api/admin/auth/profile
+          - /api/admin/auth/password
+          - ~/api/admin/auth/staff
+          - ~/api/admin/auth/roles
+          - ~/api/admin/auth/users
+        strip_path: false
+        methods:
+          - GET
+          - PUT
+          - POST
+          - DELETE
+          - PATCH
+
+  - name: course-service
+    url: http://course-service:5002
+    routes:
+      - name: course-discussion-realtime
+        paths:
+          - /course.socket.io
+        strip_path: false
+        protocols: [http, https]
+
+      - name: course-preflight
+        paths:
+          - /api/courses
+          - /api/quiz-attempts
+          - /api/categories
+          - /api/admin/courses
+        strip_path: false
+        methods:
+          - OPTIONS
+
+      - name: course-protected-reads
+        paths:
+          - /api/courses/enrolled
+          - /api/courses/my-courses
+          - /api/categories/admin/all
+          - /api/quiz-attempts
+          - ~/api/courses/[^/]+/manage$
+          - ~/api/courses/[^/]+/lessons/[^/]+/quiz$
+          - ~/api/courses/[^/]+/lessons/[^/]+/quiz/play$
+        regex_priority: 200
+        strip_path: false
+        methods:
+          - GET
+
+      - name: course-public
+        paths:
+          - /api/courses
+          - /api/categories
+        strip_path: false
+        methods:
+          - GET
+
+      - name: course-protected
+        paths:
+          - /api/courses
+          - /api/quiz-attempts
+          - /api/categories
+        strip_path: false
+        methods:
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+
+      - name: course-admin-protected
+        paths:
+          - /api/admin/courses
+        strip_path: false
+        methods:
+          - GET
+          - PATCH
+
+      - name: cart-preflight # CORS preflight là OPTIONS request, không có header Authorization → để route riêng không gắn JWT plugin.
+        paths:
+          - /api/cart
+        strip_path: false
+        methods:
+          - OPTIONS
+
+      - name: cart-protected
+        paths:
+          - /api/cart
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - DELETE
+
+      - name: wishlist-preflight
+        paths:
+          - /api/wishlist
+        strip_path: false
+        methods:
+          - OPTIONS
+
+      - name: wishlist-protected
+        paths:
+          - /api/wishlist
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - DELETE
+
+  - name: content-service
+    url: http://content-service:5008
+    routes:
+      - name: content-preflight
+        paths:
+          - /api/banners
+          - /api/admin/system/banners
+          - /api/website-config
+          - /api/admin/system/config
+        strip_path: false
+        methods:
+          - OPTIONS
+
+      - name: content-public
+        paths:
+          - /api/banners
+          - /api/website-config
+        strip_path: false
+        methods:
+          - GET
+
+      - name: content-admin-protected
+        paths:
+          - /api/admin/system/banners
+          - /api/admin/system/config
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+  - name: payment-service
+    url: http://payment-service:5004
+    routes:
+      - name: payment-preflight
+        paths:
+          - /api/payments
+        strip_path: false
+        methods:
+          - OPTIONS
+
+      - name: payment-webhook
+        paths:
+          - /api/payments/webhooks
+        strip_path: false
+        methods:
+          - GET
+          - POST
+
+      - name: payment-momo-browser-return
+        paths:
+          - /api/payments/momo-browser-return
+        strip_path: false
+        methods:
+          - GET
+
+      - name: payment-coupon-preview-public
+        paths:
+          - /api/payments/coupons/best-preview
+          - /api/payments/coupons/best-previews
+        strip_path: false
+        methods:
+          - GET
+          - POST
+
+      - name: payment-protected
+        paths:
+          - /api/payments
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+
+  - name: progress-service
+    url: http://progress-service:5005
+    routes:
+      - name: progress-preflight
+        paths:
+          - /api/progress
+        strip_path: false
+        methods:
+          - OPTIONS
+
+      - name: progress-learning-sessions-protected
+        paths:
+          - /api/progress/learning-sessions
+        strip_path: false
+        methods:
+          - POST
+          - DELETE
+      - name: progress-protected
+        paths:
+          - /api/progress
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - DELETE
+
+  - name: media-service
+    url: http://media-service:5003
+    routes:
+      - name: media-preflight
+        paths:
+          - /api/media/videos
+          - /api/media/documents
+        strip_path: false
+        methods:
+          - OPTIONS
+
+      # Route riêng cho các API upload — áp rate limit chặt hơn route thông thường.
+      # Lý do: API này sinh presigned URLs (cho phép PUT file lên storage),
+      # nếu bị spam có thể tạo hàng nghìn URL → chiếm bandwidth MinIO.
+      # Tách ra để gắn rate-limiting riêng: 10 req/phút (thay vì 100 req/phút toàn cục).
+      - name: media-upload
+        paths:
+          - /api/media/videos/initiate-upload
+          - ~/api/media/videos/[^/]+/batch-part-urls
+          # Confirm/abort cũng thuộc upload surface:
+          # confirm ghép multipart và trigger processing, abort hủy asset/session.
+          # Đưa chung vào route này để cùng chịu JWT + rate limit theo tài khoản.
+          - ~/api/media/videos/[^/]+/confirm-upload
+          - ~/api/media/videos/[^/]+/abort-upload
+        regex_priority: 300
+        strip_path: false
+        methods:
+          - GET
+          - POST
+
+
+      - name: media-playback-public
+        paths:
+          - ~/api/media/videos/[^/]+/playback$
+        regex_priority: 400
+        strip_path: false
+        methods:
+          - GET
+          - POST
+      - name: media-protected
+        paths:
+          - /api/media/videos
+          - /api/media/documents
+        strip_path: false
+        methods:
+          - GET
+          - POST
+
+  - name: notification-service
+    url: http://notification-service:5006
+    routes:
+      - name: notification-realtime
+        paths:
+          - /socket.io
+        strip_path: false
+        protocols: [http, https]
+      - name: notification-preflight
+        paths:
+          - /api/notifications
+          - /api/admin/notifications
+        strip_path: false
+        methods: [OPTIONS]
+      - name: notification-protected
+        paths:
+          - /api/notifications
+        strip_path: false
+        methods: [GET, PATCH, PUT]
+      - name: notification-admin-protected
+        paths:
+          - /api/admin/notifications
+        strip_path: false
+        methods: [GET, POST, PUT, DELETE, PATCH]
+
+  - name: inbox-service
+    url: http://inbox-service:5007
+    routes:
+      - name: inbox-realtime
+        paths: [/inbox.socket.io]
+        strip_path: false
+        protocols: [http, https]
+      - name: inbox-preflight
+        paths: [/api/inbox, /api/admin/inbox]
+        strip_path: false
+        methods: [OPTIONS]
+      - name: inbox-protected
+        paths: [/api/inbox]
+        strip_path: false
+        methods: [GET, POST, PATCH]
+      - name: inbox-admin-protected
+        paths: [/api/admin/inbox]
+        strip_path: false
+        methods: [GET, POST, PATCH, DELETE]
+
+  - name: frontend
+    url: http://frontend:8080
+    routes:
+      - name: frontend-spa
+        paths:
+          - /
+        strip_path: false
+        regex_priority: -100
+
+plugins:
+  - name: cors
+    config:
+      origins:
+        - http://localhost:5173
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - Authorization
+        - Content-Type
+        - X-Learning-Session-Id
+        - X-Learning-Session-Token
+      exposed_headers:
+        - ETag
+        - etag
+      credentials: true
+      max_age: 3600
+
+  - name: rate-limiting
+    config:
+      minute: 100
+      policy: local
+
+  # Rate limiting RIÊNG cho route upload — chặt hơn rate limit toàn cục.
+  # Tối đa 10 lần gọi initiate-upload hoặc batch-part-urls mỗi phút CHO MỖI TÀI KHOẢN (Đếm theo Header Authorization).
+  # Instructor thông thường chỉ upload 1-2 video/phút, nên 10 là dư giả.
+  # Nếu vượt → Kong trả HTTP 429 Too Many Requests.
+  - name: rate-limiting
+    route: media-upload
+    config:
+      minute: 10
+      limit_by: header
+      header_name: Authorization
+      policy: local
+
+  - name: rate-limiting
+    route: identity-sessions-protected
+    config:
+      minute: 30
+      limit_by: header
+      header_name: Authorization
+      policy: local
+
+  - name: jwt
+    route: identity-sessions-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+  - name: jwt
+    route: identity-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: jwt
+    route: course-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: jwt
+    route: course-admin-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: jwt
+    route: content-admin-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: jwt
+    route: course-protected-reads
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: jwt
+    route: cart-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: jwt
+    route: wishlist-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: jwt
+    route: payment-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: rate-limiting
+    route: progress-learning-sessions-protected
+    config:
+      minute: 30
+      limit_by: header
+      header_name: Authorization
+      policy: local
+
+  - name: jwt
+    route: progress-learning-sessions-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+  - name: jwt
+    route: progress-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: jwt
+    route: media-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  # JWT cho route upload — đảm bảo chỉ user đã đăng nhập mới xin được presigned URL.
+  - name: jwt
+    route: media-upload
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: jwt
+    route: notification-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: jwt
+    route: notification-admin-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: jwt
+    route: identity-admin-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+
+
+
+
+
+  - name: jwt
+    route: inbox-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify: [exp]
+  - name: jwt
+    route: inbox-admin-protected
+    config:
+      key_claim_name: iss
+      claims_to_verify: [exp]
+
+
+
+

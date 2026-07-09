@@ -1,0 +1,9 @@
+dependencies:
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 20.11.5
+- name: rabbitmq
+  repository: https://charts.bitnami.com/bitnami
+  version: 15.5.3
+digest: sha256:371cf0092b07337bc0e7df6573581a1bcaae2c82f5c8bd85eda4d9bc8f16f843
+generated: "2026-07-08T22:59:03.9550601+07:00"

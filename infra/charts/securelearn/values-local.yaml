@@ -1,0 +1,22 @@
+﻿image:
+  tag: "local"
+
+clientUrl: "http://localhost:8000"
+apiUrl: "http://localhost:8000"
+socketCorsOrigin: "http://localhost:8000"
+
+frontend:
+  apiBaseUrl: ""
+
+kong:
+  service:
+    type: NodePort
+
+backend:
+  replicas: 1
+
+redis:
+  enabled: true
+
+rabbitmq:
+  enabled: true

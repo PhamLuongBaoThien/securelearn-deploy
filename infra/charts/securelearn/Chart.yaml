@@ -1,0 +1,15 @@
+apiVersion: v2
+name: securelearn
+description: SecureLearn microservices platform
+version: 0.1.0
+appVersion: "1.0.0"
+type: application
+dependencies:
+  - name: redis
+    version: "20.11.5"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+  - name: rabbitmq
+    version: "15.5.3"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: rabbitmq.enabled

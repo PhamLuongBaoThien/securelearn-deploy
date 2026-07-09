@@ -24,3 +24,5 @@ minio_data/
 frontend/
 backend/
 docs/
+infra/local-secrets.env
+infra/charts/securelearn/charts/

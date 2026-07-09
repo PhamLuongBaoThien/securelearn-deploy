@@ -1,0 +1,72 @@
+{{- if .Values.kong.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kong-template
+data:
+  kong.yml: |
+{{ .Files.Get "files/kong.yml.tpl" | indent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong
+  labels: { app.kubernetes.io/name: kong, app.kubernetes.io/part-of: securelearn }
+spec:
+  replicas: {{ .Values.kong.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector:
+    matchLabels: { app.kubernetes.io/name: kong }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: kong, app.kubernetes.io/part-of: securelearn }
+      annotations:
+        checksum/kong-config: {{ .Files.Get "files/kong.yml.tpl" | sha256sum }}
+    spec:
+      initContainers:
+        - name: render-kong-config
+          image: hairyhenderson/gomplate:v4.3.0-alpine
+          args: ["-f", "/template/kong.yml", "-o", "/generated/kong.yml"]
+          env:
+            - name: KONG_JWT_SECRET
+              valueFrom:
+                secretKeyRef: { name: {{ .Values.existingSecret }}, key: ACCESS_TOKEN }
+          volumeMounts:
+            - { name: template, mountPath: /template }
+            - { name: generated, mountPath: /generated }
+      containers:
+        - name: kong
+          image: {{ .Values.kong.image | quote }}
+          env:
+            - { name: KONG_DATABASE, value: "off" }
+            - { name: KONG_DECLARATIVE_CONFIG, value: /etc/kong/generated/kong.yml }
+            - { name: KONG_ADMIN_LISTEN, value: "0.0.0.0:8001" }
+            - { name: KONG_PROXY_ACCESS_LOG, value: /dev/stdout }
+            - { name: KONG_PROXY_ERROR_LOG, value: /dev/stderr }
+            - { name: KONG_NGINX_WORKER_PROCESSES, value: {{ .Values.kong.workerProcesses | quote }} }
+            - { name: KONG_MEM_CACHE_SIZE, value: "64m" }
+          ports:
+            - { name: proxy, containerPort: 8000 }
+            - { name: status, containerPort: 8001 }
+          readinessProbe: { httpGet: { path: /status, port: status }, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /status, port: status }, periodSeconds: 20 }
+          resources: {{ toYaml .Values.kong.resources | nindent 12 }}
+          volumeMounts:
+            - { name: generated, mountPath: /etc/kong/generated }
+      volumes:
+        - name: template
+          configMap: { name: kong-template }
+        - name: generated
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata: { name: kong }
+spec:
+  type: {{ .Values.kong.service.type }}
+  selector: { app.kubernetes.io/name: kong }
+  ports:
+    - { name: http, port: {{ .Values.kong.service.httpPort }}, targetPort: proxy }
+{{- end }}

@@ -1,0 +1,95 @@
+global:
+  security:
+    allowInsecureImages: true
+
+nameOverride: ""
+fullnameOverride: ""
+imagePullSecrets: []
+
+image:
+  registry: ghcr.io/phamluongbaothien
+  pullPolicy: IfNotPresent
+  tag: "local"
+
+clientUrl: "http://localhost:8000"
+apiUrl: "http://localhost:8000"
+socketCorsOrigin: "http://localhost:8000"
+
+services:
+  identity-service: { port: 5001, grpcPort: 6001, grpcBindEnv: IDENTITY_GRPC_BIND }
+  course-service: { port: 5002, grpcPort: 6002, grpcBindEnv: COURSE_GRPC_BIND }
+  media-service: { port: 5003, grpcPort: 6003, grpcBindEnv: MEDIA_GRPC_BIND }
+  payment-service: { port: 5004, grpcPort: 6004, grpcBindEnv: PAYMENT_GRPC_BIND }
+  progress-service: { port: 5005 }
+  notification-service: { port: 5006 }
+  inbox-service: { port: 5007 }
+  content-service: { port: 5008 }
+
+backend:
+  replicas: 1
+  terminationGracePeriodSeconds: 30
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+
+frontend:
+  enabled: true
+  replicas: 1
+  image: frontend
+  tag: null
+  apiBaseUrl: ""
+  resources:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+kong:
+  enabled: true
+  image: kong:3.9.1
+  replicas: 1
+  workerProcesses: 1
+  service:
+    type: NodePort
+    httpPort: 8000
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: 500m, memory: 1Gi }
+
+config:
+  NODE_ENV: production
+  IDENTITY_GRPC_TARGET: "identity-service:6001"
+  COURSE_GRPC_TARGET: "course-service:6002"
+  MEDIA_GRPC_TARGET: "media-service:6003"
+  PAYMENT_GRPC_TARGET: "payment-service:6004"
+  S3_REGION: "auto"
+  S3_BUCKET_NAME: "securelearn-media"
+
+existingSecret: securelearn-secrets
+
+redis:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/redis
+    tag: 7.4.2-debian-12-r6
+  architecture: standalone
+  auth: { password: securelearn-local }
+  master:
+    persistence: { enabled: true, size: 2Gi }
+    pdb: { create: false }
+  replica:
+    replicaCount: 0
+    pdb: { create: false }
+  networkPolicy:
+    enabled: false
+
+rabbitmq:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/rabbitmq
+    tag: 4.0.9-debian-12-r1
+  auth: { username: securelearn, password: securelearn-local }
+  persistence: { enabled: true, size: 2Gi }
+  pdb: { create: false }
+  networkPolicy:
+    enabled: false
