@@ -246,6 +246,11 @@ services:
       RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       IDENTITY_GRPC_TARGET: ${IDENTITY_GRPC_TARGET:-identity-service:6001}
       COURSE_GRPC_TARGET: ${COURSE_GRPC_TARGET:-course-service:6002}
+      COURSE_SERVICE_URL: ${COURSE_SERVICE_URL:-http://course-service:5002}
+      CONTENT_SERVICE_URL: ${CONTENT_SERVICE_URL:-http://content-service:5008}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+      CHATBOT_GUEST_TOKEN_SECRET: ${CHATBOT_GUEST_TOKEN_SECRET:-}
       CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
       SOCKET_CORS_ORIGIN: ${SOCKET_CORS_ORIGIN:-http://localhost:5173}
       S3_ENDPOINT: ${S3_ENDPOINT:-}
@@ -263,3 +268,4 @@ services:
 
 volumes:
   kong-config:
+

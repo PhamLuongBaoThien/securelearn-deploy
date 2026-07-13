@@ -58,6 +58,8 @@ config:
   NODE_ENV: production
   IDENTITY_GRPC_TARGET: "identity-service:6001"
   COURSE_GRPC_TARGET: "course-service:6002"
+  COURSE_SERVICE_URL: "http://course-service:5002"
+  CONTENT_SERVICE_URL: "http://content-service:5008"
   MEDIA_GRPC_TARGET: "media-service:6003"
   PAYMENT_GRPC_TARGET: "payment-service:6004"
   S3_REGION: "auto"
@@ -93,3 +95,4 @@ rabbitmq:
   pdb: { create: false }
   networkPolicy:
     enabled: false
+
