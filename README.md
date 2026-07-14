@@ -1,182 +1,108 @@
-# SecureLearn Deploy
+# SecureLearn Local Development
 
-Repository này chứa cấu hình chạy tổng thể cho dự án SecureLearn bằng Docker Compose.
+Repository root này giữ cấu hình chạy tổng thể cho SecureLearn. Hiện flow local chính là:
 
-Source code frontend và backend được quản lý ở 2 repository riêng:
+```text
+Frontend local npm run dev -> http://localhost:5173
+Backend Kubernetes local -> Kong http://localhost:30681
+```
 
-- Frontend: `securelearn-web`
-- Backend: `securelearn-services`
-- Deploy/infra: repository hiện tại, chứa `docker-compose.yml`
+Docker Compose vẫn được giữ làm fallback/onboarding/debug comparison, không còn là flow chính.
 
 ## Cấu trúc thư mục
 
-Khi chạy local, cần đặt các thư mục theo đúng cấu trúc sau:
-
 ```text
 SecureLearn/
-├── frontend/              # React, Vite, TypeScript
-├── backend/               # Node.js microservices và Kong config
-│   ├── api-gateway/
-│   │   └── kong.yml
-│   ├── identity-service/
-│   ├── course-service/
-│   └── media-service/
-├── docker-compose.yml     # Cấu hình Docker Compose cho backend services và infra
-├── .env                   # Biến môi trường local, không push lên GitHub
-├── .env.example           # File mẫu biến môi trường nếu có
+├── frontend/                  # React, Vite, TypeScript; chạy local bằng npm run dev
+├── backend/                   # Node.js microservices và Kong config
+├── infra/                     # Helm chart Kubernetes local v1 Lite
+│   └── charts/securelearn/
+├── docker-compose.yml         # Fallback Docker Compose workflow
+├── .env                       # Env cho Docker Compose fallback, không commit
 ├── .gitignore
 └── README.md
 ```
 
-Repository deploy chỉ nên track các file cấu hình cần thiết như:
+## Flow chính hiện tại: Frontend local + Backend Kubernetes
+
+Đọc hướng dẫn chi tiết tại:
 
 ```text
-docker-compose.yml
-.gitignore
-.env.example
-README.md
+infra/README.md
 ```
 
-Không track các thư mục `frontend/` và `backend/` trong repository này vì chúng đã có Git repository riêng.
+URL local chuẩn:
 
-## Điều kiện trước khi chạy
+```text
+Frontend:        http://localhost:5173
+Kubernetes Kong: http://localhost:30681
+```
 
-Cần cài đặt:
+Frontend dev proxy trong `frontend/vite.config.ts` chuyển `/api` sang `http://localhost:30681`.
 
-- Docker Desktop
-- Git
-- Node.js nếu muốn chạy frontend riêng ở chế độ development
+Chạy frontend:
 
-Cần clone frontend và backend vào đúng vị trí:
+```powershell
+cd D:\SecureLearn\frontend
+npm run dev
+```
+
+Backend chạy bằng Helm/Kubernetes local:
 
 ```powershell
 cd D:\SecureLearn
-git clone https://github.com/PhamLuongBaoThien/securelearn-web.git frontend
-git clone https://github.com/PhamLuongBaoThien/securelearn-services.git backend
+helm upgrade --install securelearn infra/charts/securelearn `
+  -n securelearn-local --create-namespace `
+  -f infra/charts/securelearn/values-local.yaml
 ```
 
-## Cấu hình môi trường
+## Env theo từng workflow
 
-Tạo file `.env` tại thư mục root `D:\SecureLearn`.
+Kubernetes backend dùng:
 
-File `.env` là file dùng thật trên máy local và không được push lên GitHub. Nếu có `.env.example`, có thể copy từ file mẫu:
-
-```powershell
-Copy-Item .env.example .env
+```text
+infra/local-secrets.env
 ```
 
-Sau đó điền các biến cần thiết cho `docker-compose.yml`, bao gồm:
+Docker Compose fallback dùng:
 
-```env
-REDIS_PASSWORD=
-RABBITMQ_DEFAULT_USER=
-RABBITMQ_DEFAULT_PASS=
-
-MINIO_ROOT_USER=
-MINIO_ROOT_PASSWORD=
-
-MONGO_URI_IDENTITY=
-MONGO_URI_COURSE=
-MONGO_URI_MEDIA=
-MONGO_URI_NOTIFICATION=
-MONGO_URI_INBOX=
-
-ACCESS_TOKEN=
-REFRESH_TOKEN=
-
-CLIENT_URL=http://localhost:5173
-API_URL=http://localhost:8000
-
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_CALLBACK_URL=http://localhost:8000/api/auth/google/callback
-
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-SMTP_USER=
-SMTP_PASS=
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-
-S3_ENDPOINT=
-S3_REGION=us-east-1
-S3_ACCESS_KEY_ID=
-S3_SECRET_ACCESS_KEY=
-S3_BUCKET_NAME=securelearn-media
-S3_PUBLIC_DOMAIN=
-S3_PUBLIC_ENDPOINT=
+```text
+.env
 ```
 
-## Chạy hệ thống
+Frontend Vite local dùng:
 
-Tại thư mục root:
+```text
+frontend/vite.config.ts
+```
+
+hoặc `.env.local` nếu sau này cấu hình thêm.
+
+## Docker Compose fallback
+
+Chỉ dùng Compose khi cần fallback, onboarding người mới, hoặc so sánh lỗi Compose vs Kubernetes.
 
 ```powershell
 cd D:\SecureLearn
 docker compose up -d --build
 ```
 
-Kiểm tra container:
-
-```powershell
-docker compose ps
-```
-
-Xem log:
-
-```powershell
-docker compose logs -f
-```
-
-Dừng hệ thống:
-
-```powershell
-docker compose down
-```
-
-## Các service chính
-
-- Kong API Gateway: `http://localhost:8000`
-- MinIO Console: `http://localhost:9001`
-- Identity Service: chạy nội bộ trong Docker ở port `5001`
-- Course Service: chạy nội bộ trong Docker ở port `5002`
-- Media Service: chạy nội bộ trong Docker ở port `5003`
-- Redis, RabbitMQ và MinIO được dùng làm hạ tầng nội bộ cho backend services
-
-Frontend development mặc định chạy riêng ở:
+Compose gateway thường là:
 
 ```text
-http://localhost:5173
+http://localhost:8000
 ```
 
-## Ghi chú về Git
+Không nên chạy Compose và Kubernetes backend song song trừ khi debug có chủ đích, vì dễ nhầm gateway/cookie/callback/log.
 
-Repository này chỉ dùng cho cấu hình deploy/infra. Khi sửa code frontend hoặc backend, commit và push trong từng repository riêng:
+## Git note
 
-```powershell
-cd D:\SecureLearn\frontend
-git status
-git add .
-git commit -m "Update frontend"
-git push
+Project hiện có 3 repo:
+
+```text
+D:\SecureLearn
+D:\SecureLearn\frontend
+D:\SecureLearn\backend
 ```
 
-```powershell
-cd D:\SecureLearn\backend
-git status
-git add .
-git commit -m "Update backend"
-git push
-```
-
-Khi sửa `docker-compose.yml`, `.gitignore`, `.env.example` hoặc README này thì commit trong repository deploy tại root:
-
-```powershell
-cd D:\SecureLearn
-git status
-git add docker-compose.yml .gitignore .env.example README.md
-git commit -m "Update deployment configuration"
-git push
-```
+Khi sửa frontend/backend, commit trong repo tương ứng. Khi sửa infra/root config, commit ở repo root.

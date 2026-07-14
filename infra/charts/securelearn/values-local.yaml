@@ -1,12 +1,10 @@
-﻿image:
+image:
   tag: "local"
 
-clientUrl: "http://localhost:8000"
-apiUrl: "http://localhost:8000"
-socketCorsOrigin: "http://localhost:8000"
+clientUrl: "http://localhost:5173"
+apiUrl: "http://localhost:30681"
+socketCorsOrigin: "http://localhost:5173"
 
-frontend:
-  apiBaseUrl: ""
 
 kong:
   service:

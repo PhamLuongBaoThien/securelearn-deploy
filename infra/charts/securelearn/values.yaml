@@ -11,9 +11,9 @@ image:
   pullPolicy: IfNotPresent
   tag: "local"
 
-clientUrl: "http://localhost:8000"
-apiUrl: "http://localhost:8000"
-socketCorsOrigin: "http://localhost:8000"
+clientUrl: "http://localhost:5173"
+apiUrl: "http://localhost:30681"
+socketCorsOrigin: "http://localhost:5173"
 
 services:
   identity-service: { port: 5001, grpcPort: 6001, grpcBindEnv: IDENTITY_GRPC_BIND }
@@ -32,15 +32,6 @@ backend:
     requests: { cpu: 50m, memory: 128Mi }
     limits: { cpu: 500m, memory: 512Mi }
 
-frontend:
-  enabled: true
-  replicas: 1
-  image: frontend
-  tag: null
-  apiBaseUrl: ""
-  resources:
-    requests: { cpu: 25m, memory: 32Mi }
-    limits: { cpu: 200m, memory: 128Mi }
 
 kong:
   enabled: true

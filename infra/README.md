@@ -1,16 +1,17 @@
-﻿# SecureLearn Kubernetes Local v1 Lite
+# SecureLearn Kubernetes Local v1 Lite
 
-Mục tiêu của v1 Lite là chạy SecureLearn trên Kubernetes local trước:
+Mục tiêu v1 Lite hiện tại là chạy backend SecureLearn trên Kubernetes local, còn frontend chạy riêng bằng Vite dev server:
 
-`Frontend -> Kong -> 8 backend services -> Redis/RabbitMQ local + MongoDB Atlas + R2/S3`
+`Frontend npm run dev -> Kong Kubernetes -> 8 backend services -> Redis/RabbitMQ local + MongoDB Atlas + R2/S3`
 
-Docker Compose vẫn được giữ để fallback trong giai đoạn học Kubernetes.
+Docker Compose vẫn được giữ làm fallback trong giai đoạn học Kubernetes. Không nên chạy Compose và Kubernetes backend song song trừ khi đang debug có chủ đích.
 
 ## 1. Cần có trên máy
 
 - Docker Desktop và bật Kubernetes trong Settings.
 - `kubectl` dùng context Docker Desktop.
 - Helm.
+- Node.js/npm cho frontend local dev.
 
 Kiểm tra:
 
@@ -21,7 +22,24 @@ helm version
 
 Nếu `kubectl get nodes` chưa chạy được, hãy mở Docker Desktop và chờ Kubernetes chuyển sang trạng thái running.
 
-## 2. Tạo Secret local
+## 2. URL local chuẩn
+
+- Frontend local: `http://localhost:5173`
+- Backend/Kong Kubernetes: `http://localhost:30681`
+- API từ frontend dev: `/api/...` được Vite proxy sang `http://localhost:30681`
+
+Các URL OAuth/payment local nên theo quy ước:
+
+```env
+CLIENT_URL=http://localhost:5173
+GOOGLE_CALLBACK_URL=http://localhost:30681/api/auth/google/callback
+MOMO_RETURN_URL=http://localhost:5173/payment/momo-return
+VNPAY_RETURN_URL=http://localhost:5173/payment/vnpay-return
+```
+
+IPN/webhook thật từ MoMo/VNPAY cần URL public như ngrok. Nếu chỉ test local browser return, có thể dùng Kong local `http://localhost:30681/...`.
+
+## 3. Tạo Secret local
 
 Secret thật không commit vào Git. Tạo file local từ mẫu:
 
@@ -38,20 +56,26 @@ kubectl create namespace securelearn-local --dry-run=client -o yaml | kubectl ap
 kubectl -n securelearn-local create secret generic securelearn-secrets --from-env-file=infra/local-secrets.env --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-## 3. Build Docker images local
+## 4. Build Docker images backend local
 
-V1 Lite dùng tag `local`, không dùng `latest`.
+V1 Lite dùng tag `local`, không dùng `latest`. Frontend không cần build image khi dev local bằng `npm run dev`.
 
 ```powershell
 $services = 'identity-service','course-service','media-service','payment-service','progress-service','notification-service','inbox-service','content-service'
 foreach ($service in $services) {
   docker build -t "ghcr.io/phamluongbaothien/${service}:local" -f "backend/${service}/Dockerfile" backend
 }
-
-docker build -t ghcr.io/phamluongbaothien/frontend:local frontend
 ```
 
-## 4. Deploy bằng Helm
+Khi chỉ sửa một backend, chỉ build service đó. Ví dụ:
+
+```powershell
+docker build -f ./backend/course-service/Dockerfile -t ghcr.io/phamluongbaothien/course-service:local ./backend
+kubectl -n securelearn-local rollout restart deployment/course-service
+kubectl -n securelearn-local rollout status deployment/course-service
+```
+
+## 5. Deploy backend bằng Helm
 
 ```powershell
 helm dependency build infra/charts/securelearn
@@ -63,18 +87,23 @@ helm upgrade --install securelearn infra/charts/securelearn `
   -f infra/charts/securelearn/values-local.yaml
 ```
 
-## 5. Mở app qua Kong
+Chart local không còn quản lý frontend. Kubernetes chỉ chạy backend, Kong, Redis và RabbitMQ.
+
+## 6. Chạy frontend local
+
+Trong terminal riêng:
 
 ```powershell
-kubectl -n securelearn-local port-forward service/kong 8000:8000
+cd frontend
+npm run dev
 ```
 
-Sau đó mở:
+Mở:
 
-- Frontend: `http://localhost:8000`
-- API: `http://localhost:8000/api/...`
+- Frontend: `http://localhost:5173`
+- Backend/Kong trực tiếp: `http://localhost:30681/api/...`
 
-## 6. Kiểm tra và debug
+## 7. Kiểm tra và debug
 
 ```powershell
 kubectl get pods -n securelearn-local
@@ -89,14 +118,20 @@ Backend health endpoints:
 - `/health/live`: tiến trình Node còn sống.
 - `/health/ready`: service đã sẵn sàng nhận request.
 
-## 7. Những file chính nên đọc trước
+Nếu frontend gọi nhầm môi trường, mở DevTools -> Network và kiểm tra Request URL:
 
-- `infra/charts/securelearn/Chart.yaml`: khai báo Helm chart và Redis/RabbitMQ dependencies.
-- `infra/charts/securelearn/values.yaml`: cấu hình mặc định cho local.
-- `infra/charts/securelearn/values-local.yaml`: override local khi deploy.
+- `http://localhost:30681/api/...`: đang gọi Kubernetes.
+- `http://localhost:8000/api/...`: có thể đang gọi Docker Compose/Kong cũ.
+
+## 8. Những file chính nên đọc trước
+
+- `infra/charts/securelearn/Chart.yaml`: Helm chart và Redis/RabbitMQ dependencies.
+- `infra/charts/securelearn/values.yaml`: cấu hình mặc định.
+- `infra/charts/securelearn/values-local.yaml`: override local khi deploy backend K8s.
 - `infra/charts/securelearn/templates/backend.yaml`: Deployment và Service cho 8 backend.
-- `infra/charts/securelearn/templates/frontend.yaml`: Deployment và Service cho frontend.
 - `infra/charts/securelearn/templates/kong.yaml`: Kong DB-less và Service local.
-- `infra/charts/securelearn/files/kong.yml.tpl`: route matrix của Kong.
+- `infra/charts/securelearn/files/kong.yml.tpl`: route matrix API của Kong.
+- `frontend/vite.config.ts`: proxy frontend dev sang Kong Kubernetes.
 
 Không commit `infra/local-secrets.env` hoặc bất kỳ secret thật nào.
+

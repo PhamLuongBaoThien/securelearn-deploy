@@ -1,4 +1,4 @@
-﻿# ========================
+# ========================
 # Kong Declarative Configuration
 # API Gateway cho SecureLearn Microservices
 #
@@ -433,14 +433,6 @@ services:
         strip_path: false
         methods: [GET, POST, PATCH, DELETE]
 
-  - name: frontend
-    url: http://frontend:8080
-    routes:
-      - name: frontend-spa
-        paths:
-          - /
-        strip_path: false
-        regex_priority: -100
 
 plugins:
   - name: cors
