@@ -9,9 +9,14 @@ metadata:
     {{- include "securelearn.labels" $ | nindent 4 }}
 spec:
   replicas: {{ $.Values.backend.replicas }}
+  {{- if eq ($service.deploymentStrategy | default "RollingUpdate") "Recreate" }}
+  strategy:
+    type: Recreate
+  {{- else }}
   strategy:
     type: RollingUpdate
     rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  {{- end }}
   selector:
     matchLabels: { app.kubernetes.io/name: {{ $name }} }
   template:
@@ -40,6 +45,9 @@ spec:
             - { name: PORT, value: {{ $service.port | quote }} }
             {{- if $service.grpcPort }}
             - { name: {{ $service.grpcBindEnv }}, value: "0.0.0.0:{{ $service.grpcPort }}" }
+            {{- end }}
+            {{- range $key, $value := ($service.env | default dict) }}
+            - { name: {{ $key }}, value: {{ $value | quote }} }
             {{- end }}
             - name: MONGO_URI
               valueFrom:

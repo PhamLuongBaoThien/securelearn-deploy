@@ -22,9 +22,14 @@ services:
     port: 5003
     grpcPort: 6003
     grpcBindEnv: MEDIA_GRPC_BIND
+    deploymentStrategy: Recreate
+    env:
+      FFMPEG_THREADS: "3"
+      VIDEO_ENCODE_CONCURRENCY: "2"
+      VIDEO_QUEUE_POLL_INTERVAL_MS: "2000"
     resources:
-      requests: { cpu: 50m, memory: 128Mi }
-      limits: { cpu: "2", memory: 512Mi }
+      requests: { cpu: "2", memory: 1Gi }
+      limits: { cpu: "6", memory: 2Gi }
   payment-service: { port: 5004, grpcPort: 6004, grpcBindEnv: PAYMENT_GRPC_BIND }
   progress-service: { port: 5005 }
   notification-service: { port: 5006 }

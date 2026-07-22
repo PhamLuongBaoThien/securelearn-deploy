@@ -199,9 +199,14 @@ services:
       S3_PUBLIC_DOMAIN: ${S3_PUBLIC_DOMAIN:-}
       S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-}
       API_URL: ${API_URL:-http://localhost:8000}
+      FFMPEG_THREADS: ${FFMPEG_THREADS:-2}
+      VIDEO_ENCODE_CONCURRENCY: ${VIDEO_ENCODE_CONCURRENCY:-2}
+      VIDEO_QUEUE_POLL_INTERVAL_MS: ${VIDEO_QUEUE_POLL_INTERVAL_MS:-2000}
     depends_on:
       - redis
       - rabbitmq
+    mem_limit: 2g
+    cpus: 4.0
     restart: unless-stopped
 
   notification-service:
