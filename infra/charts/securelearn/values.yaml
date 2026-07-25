@@ -33,7 +33,11 @@ services:
   payment-service: { port: 5004, grpcPort: 6004, grpcBindEnv: PAYMENT_GRPC_BIND }
   progress-service: { port: 5005 }
   notification-service: { port: 5006 }
-  inbox-service: { port: 5007 }
+  inbox-service:
+    port: 5007
+    env:
+      GEMINI_API_KEY: ""
+      GEMINI_MODEL: "gemini-flash-latest"
   content-service: { port: 5008 }
 
 backend:
