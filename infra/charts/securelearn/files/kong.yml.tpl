@@ -291,6 +291,13 @@ services:
           - GET
           - POST
 
+      - name: payment-subscription-plans-public
+        paths:
+          - /api/payments/subscription-plans
+        strip_path: false
+        methods:
+          - GET
+
       - name: payment-protected
         paths:
           - /api/payments
