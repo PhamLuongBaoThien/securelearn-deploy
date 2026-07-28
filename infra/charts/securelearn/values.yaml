@@ -36,8 +36,8 @@ services:
   inbox-service:
     port: 5007
     env:
-      GEMINI_API_KEY: ""
       GEMINI_MODEL: "gemini-flash-latest"
+      S3_BUCKET_NAME: "securelearn-inbox"
   content-service: { port: 5008 }
 
 backend:
