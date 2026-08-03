@@ -36,7 +36,8 @@ services:
   inbox-service:
     port: 5007
     env:
-      GEMINI_MODEL: "gemini-flash-latest"
+      GEMINI_MODEL: "gemini-3.5-flash-lite"
+      GEMINI_TIMEOUT_MS: "60000"
       S3_BUCKET_NAME: "securelearn-inbox"
   content-service: { port: 5008 }
 
