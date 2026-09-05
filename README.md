@@ -10,7 +10,9 @@ Nền tảng học trực tuyến theo kiến trúc microservices, hỗ trợ to
 - [SecureLearn Services](https://github.com/PhamLuongBaoThien/securelearn-services) — 8 microservices Node.js/Express.js.
 - [SecureLearn Deploy](https://github.com/PhamLuongBaoThien/securelearn-deploy) — Kong API Gateway, Docker Compose và Helm chart.
 
-<!-- Khi có video, thêm dòng: [▶ Xem video demo](URL_GOOGLE_DRIVE_HOAC_YOUTUBE) -->
+## Demo và báo cáo
+
+- [Xem video demo và báo cáo dự án trên Google Drive](https://drive.google.com/drive/folders/1sLt8SGmUhkDaVBrS4YqgW1gkL_hoW8nb?usp=drive_link)
 
 ## Kiến trúc hệ thống
 
@@ -52,6 +54,43 @@ Mọi request từ frontend đi qua **Kong API Gateway** trước khi được �
 ![Dashboard quản trị](readme-assets/admin-dashboard.png)
 
 ## Chạy dự án trên máy cá nhân
+
+### Clone đầy đủ ba repository
+
+```powershell
+git clone https://github.com/PhamLuongBaoThien/securelearn-deploy.git SecureLearn
+cd SecureLearn
+git clone https://github.com/PhamLuongBaoThien/securelearn-web.git frontend
+git clone https://github.com/PhamLuongBaoThien/securelearn-services.git backend
+```
+
+Sau khi clone, cấu trúc thư mục cần có dạng:
+
+```text
+SecureLearn/
+├── frontend/
+├── backend/
+├── infra/
+└── docker-compose.yml
+```
+
+### Cấu hình biến môi trường
+
+Docker Compose sử dụng file `.env` tại thư mục gốc. Tạo file từ mẫu và điền thông tin MongoDB Atlas, JWT, Cloudflare R2, OAuth, SMTP và cổng thanh toán:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Nếu chạy backend trên Kubernetes local, tạo file secret riêng từ mẫu:
+
+```powershell
+Copy-Item infra/local-secrets.example.env infra/local-secrets.env
+```
+
+Hai file `.env` và `infra/local-secrets.env` đã được Git bỏ qua. Không commit secret, API key hoặc thông tin thanh toán thật.
+
+### Khởi chạy
 
 Luồng phát triển chính hiện tại là **frontend chạy bằng Vite** và **backend chạy trên Kubernetes local**:
 
