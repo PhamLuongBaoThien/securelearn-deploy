@@ -1,108 +1,78 @@
-# SecureLearn Local Development
+# SecureLearn
 
-Repository root này giữ cấu hình chạy tổng thể cho SecureLearn. Hiện flow local chính là:
+Nền tảng học trực tuyến theo kiến trúc microservices, hỗ trợ toàn bộ quy trình từ xây dựng, kiểm duyệt và kinh doanh khóa học đến học tập, thanh toán và bảo vệ nội dung số.
+
+> **Dự án cá nhân** · 8 microservices · Frontend, backend và hạ tầng được quản lý trong ba repository riêng.
+
+## Repository
+
+- [SecureLearn Web](https://github.com/PhamLuongBaoThien/securelearn-web) — giao diện React cho học viên, giảng viên và quản trị viên.
+- [SecureLearn Services](https://github.com/PhamLuongBaoThien/securelearn-services) — 8 microservices Node.js/Express.js.
+- [SecureLearn Deploy](https://github.com/PhamLuongBaoThien/securelearn-deploy) — Kong API Gateway, Docker Compose và Helm chart.
+
+<!-- Khi có video, thêm dòng: [▶ Xem video demo](URL_GOOGLE_DRIVE_HOAC_YOUTUBE) -->
+
+## Kiến trúc hệ thống
+
+![Kiến trúc tổng thể SecureLearn](readme-assets/system-architecture.png)
+
+Mọi request từ frontend đi qua **Kong API Gateway** trước khi được định tuyến đến service phù hợp. Các service sử dụng **gRPC** cho một số lời gọi đồng bộ, **RabbitMQ** cho sự kiện bất đồng bộ, **Redis** cho cache/session và **MongoDB Atlas** để lưu trữ dữ liệu nghiệp vụ.
+
+## Chức năng nổi bật
+
+- **Xác thực và phân quyền:** OTP qua email, JWT access/refresh token, Google OAuth 2.0, RBAC và quản lý phiên đăng nhập trên nhiều thiết bị.
+- **Khóa học và học tập:** biên soạn giáo trình, quản lý phiên bản, gửi duyệt, ghi danh, quiz, ghi chú, thảo luận, đánh giá và theo dõi tiến độ.
+- **Thanh toán:** mua khóa học hoặc gói thuê bao qua MoMo/VNPay, áp dụng coupon và quản lý giao dịch.
+- **Bảo vệ video:** tải trực tiếp nhiều phần lên Cloudflare R2, chuyển mã bằng FFmpeg thành HLS ba chất lượng và mã hóa AES-128.
+- **Tương tác thời gian thực:** thảo luận, thông báo và hỗ trợ trực tuyến bằng Socket.IO.
+- **AI:** chatbot sử dụng Gemini API và dữ liệu khóa học nội bộ để đưa ra gợi ý phù hợp với ngữ cảnh.
+
+## Công nghệ sử dụng
+
+| Thành phần | Công nghệ |
+| --- | --- |
+| Frontend | React, TypeScript, Redux Toolkit, TanStack Query, Tailwind CSS |
+| Backend | Node.js, Express.js, MongoDB, Redis, RabbitMQ, gRPC, Socket.IO |
+| Gateway & triển khai | Kong API Gateway, Docker Compose, Kubernetes, Helm |
+| Media | Cloudflare R2, FFmpeg, HLS, AES-128 |
+| Tích hợp | Google OAuth 2.0, MoMo, VNPay, Gemini API, Cloudinary, Nodemailer |
+
+## Giao diện tiêu biểu
+
+### Trang chủ và danh mục khóa học
+
+![Trang chủ SecureLearn](readme-assets/homepage.png)
+
+### Không gian học tập
+
+![Giao diện học video](readme-assets/learning-interface.png)
+
+### Trang quản trị
+
+![Dashboard quản trị](readme-assets/admin-dashboard.png)
+
+## Chạy dự án trên máy cá nhân
+
+Luồng phát triển chính hiện tại là **frontend chạy bằng Vite** và **backend chạy trên Kubernetes local**:
 
 ```text
-Frontend local npm run dev -> http://localhost:5173
-Backend Kubernetes local -> Kong http://localhost:30681
+Frontend http://localhost:5173
+        ↓
+Kong     http://localhost:30681
+        ↓
+8 backend services
 ```
 
-Docker Compose vẫn được giữ làm fallback/onboarding/debug comparison, không còn là flow chính.
+Xem hướng dẫn cài đặt, cấu hình secret, build image và triển khai tại [infra/README.md](infra/README.md).
 
-## Cấu trúc thư mục
-
-```text
-SecureLearn/
-├── frontend/                  # React, Vite, TypeScript; chạy local bằng npm run dev
-├── backend/                   # Node.js microservices và Kong config
-├── infra/                     # Helm chart Kubernetes local v1 Lite
-│   └── charts/securelearn/
-├── docker-compose.yml         # Fallback Docker Compose workflow
-├── .env                       # Env cho Docker Compose fallback, không commit
-├── .gitignore
-└── README.md
-```
-
-## Flow chính hiện tại: Frontend local + Backend Kubernetes
-
-Đọc hướng dẫn chi tiết tại:
-
-```text
-infra/README.md
-```
-
-URL local chuẩn:
-
-```text
-Frontend:        http://localhost:5173
-Kubernetes Kong: http://localhost:30681
-```
-
-Frontend dev proxy trong `frontend/vite.config.ts` chuyển `/api` sang `http://localhost:30681`.
-
-Chạy frontend:
+Docker Compose được giữ làm phương án chạy thay thế:
 
 ```powershell
-cd D:\SecureLearn\frontend
-npm run dev
-```
-
-Backend chạy bằng Helm/Kubernetes local:
-
-```powershell
-cd D:\SecureLearn
-helm upgrade --install securelearn infra/charts/securelearn `
-  -n securelearn-local --create-namespace `
-  -f infra/charts/securelearn/values-local.yaml
-```
-
-## Env theo từng workflow
-
-Kubernetes backend dùng:
-
-```text
-infra/local-secrets.env
-```
-
-Docker Compose fallback dùng:
-
-```text
-.env
-```
-
-Frontend Vite local dùng:
-
-```text
-frontend/vite.config.ts
-```
-
-hoặc `.env.local` nếu sau này cấu hình thêm.
-
-## Docker Compose fallback
-
-Chỉ dùng Compose khi cần fallback, onboarding người mới, hoặc so sánh lỗi Compose vs Kubernetes.
-
-```powershell
-cd D:\SecureLearn
 docker compose up -d --build
 ```
 
-Compose gateway thường là:
+## Tác giả
 
-```text
-http://localhost:8000
-```
+**Phạm Lương Bảo Thiện**
 
-Không nên chạy Compose và Kubernetes backend song song trừ khi debug có chủ đích, vì dễ nhầm gateway/cookie/callback/log.
-
-## Git note
-
-Project hiện có 3 repo:
-
-```text
-D:\SecureLearn
-D:\SecureLearn\frontend
-D:\SecureLearn\backend
-```
-
-Khi sửa frontend/backend, commit trong repo tương ứng. Khi sửa infra/root config, commit ở repo root.
+- GitHub: [PhamLuongBaoThien](https://github.com/PhamLuongBaoThien)
